@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
+  basePath: '/calculator-frontend',
+  assetPrefix: '/calculator-frontend/',
   // basePath: process.env.NODE_ENV === 'production' ? '/calculator-frontend' : '',
   // assetPrefix: process.env.NODE_ENV === 'production' ? '/calculator-frontend/' : '',
 };
