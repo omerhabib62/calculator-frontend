@@ -9,6 +9,13 @@ export interface CalculationResponse {
   result: number;
 }
 
+export interface CalculationResult {
+  operation: Operation;
+  numbers: number[];
+  result: number;
+  timestamp: Date;
+}
+
 export interface CalculationHistory {
   id: string;
   operation: Operation;

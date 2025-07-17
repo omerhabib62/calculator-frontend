@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { Operation, CalculationHistory } from "@/types/calculator";
 import { CalculatorApi } from "@/services/calculatorApi";
 
+interface TestResults {
+  sum: number;
+  multiply: number;
+  subtract: number;
+  divide: number;
+  health: string;
+}
+
 export default function Calculator() {
   const [operation, setOperation] = useState<Operation>("sum");
   const [numbersInput, setNumbersInput] = useState("");
@@ -12,7 +20,7 @@ export default function Calculator() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [history, setHistory] = useState<CalculationHistory[]>([]);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResults | null>(null);
 
   // Check connection to your microservices on component mount
   useEffect(() => {
@@ -24,9 +32,11 @@ export default function Calculator() {
       await CalculatorApi.healthCheck();
       setIsConnected(true);
       setError("");
-    } catch (err: any) {
+    } catch (error) {
       setIsConnected(false);
-      setError(err.message);
+      const errorMessage =
+        error instanceof Error ? error.message : "Connection failed";
+      setError(errorMessage);
     }
   };
 
@@ -80,8 +90,10 @@ export default function Calculator() {
       console.log(
         `Result of ${operation}([${numbers.join(",")}]): ${response.result}`
       );
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      setError(errorMessage);
       setResult(null);
     } finally {
       setIsLoading(false);
@@ -131,28 +143,37 @@ export default function Calculator() {
 
       setHistory((prev) => [...testHistory, ...prev]);
       setResult(results.divide); // Show last result
-    } catch (err: any) {
-      setError(`Test failed: ${err.message}`);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Test failed with unknown error";
+      setError(`Test failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const operationLabels = {
+  const operationLabels: Record<Operation, string> = {
     sum: "Addition (+)",
     subtract: "Subtraction (−)",
     multiply: "Multiplication (×)",
     divide: "Division (÷)",
   };
 
-  const quickTests = [
-    { operation: "sum" as Operation, numbers: [1, 2, 3, 4], expected: 10 },
-    { operation: "multiply" as Operation, numbers: [2, 3, 4], expected: 24 },
-    { operation: "subtract" as Operation, numbers: [10, 3, 2], expected: 5 },
-    { operation: "divide" as Operation, numbers: [100, 5, 2], expected: 10 },
+  const quickTests: Array<{
+    operation: Operation;
+    numbers: number[];
+    expected: number;
+  }> = [
+    { operation: "sum", numbers: [1, 2, 3, 4], expected: 10 },
+    { operation: "multiply", numbers: [2, 3, 4], expected: 24 },
+    { operation: "subtract", numbers: [10, 3, 2], expected: 5 },
+    { operation: "divide", numbers: [100, 5, 2], expected: 10 },
   ];
 
-  const useQuickTest = (test: (typeof quickTests)[0]) => {
+  // Fixed: Renamed from "useQuickTest" to "applyQuickTest" to avoid React Hook rules
+  const applyQuickTest = (test: (typeof quickTests)[0]) => {
     setOperation(test.operation);
     setNumbersInput(test.numbers.join(", "));
     setResult(null);
@@ -294,7 +315,7 @@ export default function Calculator() {
                 {quickTests.map((test, index) => (
                   <button
                     key={index}
-                    onClick={() => useQuickTest(test)}
+                    onClick={() => applyQuickTest(test)}
                     disabled={!isConnected}
                     className="p-2 text-left text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
                   >
